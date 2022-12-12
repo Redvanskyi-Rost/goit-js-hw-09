@@ -1,45 +1,43 @@
-import Notiflix from 'notiflix';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const formRef = document.querySelector('form');
+const refs = {
+  form: document.querySelector('.form'),
+  delay: document.querySelector('input[name="delay"]'),
+  step: document.querySelector('input[name="step"]'),
+  amount: document.querySelector('input[name="amount"]'),
+};
 
-formRef.addEventListener('submit', onSubmit);
+refs.form.addEventListener('submit', onSumbit);
 
-function onSubmit(e) {
-  e.preventDefault();
-  let delay = Number(formRef[0].value);
-  let step = Number(formRef[1].value);
-  let amount = Number(formRef[2].value);
+function onSumbit(event) {
+  event.preventDefault();
+  let delayVal = Number(refs.delay.value);
+  const stepVal = Number(refs.step.value);
+  const amountVal = Number(refs.amount.value);
 
-  if (delay <= 0 || step <= 0 || amount <= 0) {
-    Notiflix.Notify.info('Enter a positive numbers.');
-    return;
-  }
-
-  for (let position = 1; position <= amount; position += 1) {
-    createPromise(position, delay)
-      .then(({ position, delay }) => {
-        Notiflix.Notify.success(
-          `✅ Fulfilled promise ${position} in ${delay}ms`
-        );
-      })
-      .catch(({ position, delay }) => {
-        Notiflix.Notify.failure(
-          `❌ Rejected promise ${position} in ${delay}ms`
-        );
-      });
-    delay += step;
+  for (let position = 1; position <= amountVal; position += 1) {
+    delayVal += position === 1 ? 0 : stepVal;
+    createPromise({ position, delayVal }).then(onSucces).catch(onError);
   }
 }
 
-function createPromise(position, delay) {
+function createPromise({ position, delayVal }) {
   const shouldResolve = Math.random() > 0.3;
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) =>
     setTimeout(() => {
       if (shouldResolve) {
-        resolve({ position, delay });
+        resolve({ position, delayVal });
       } else {
-        reject({ position, delay });
+        reject({ position, delayVal });
       }
-    }, delay);
-  });
+    }, delayVal)
+  );
+}
+
+function onSucces({ position, delayVal }) {
+  Notify.success(`✅ Fulfilled promise ${position} in ${delayVal}ms`);
+}
+
+function onError({ position, delayVal }) {
+  Notify.failure(`❌ Rejected promise ${position} in ${delayVal}ms`);
 }
